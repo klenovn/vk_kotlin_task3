@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">vk_kotlin_task3</string>
+    <string name="menu_search_title">Search</string>
+    <string name="menu_menu_title">Menu</string>
+    <string name="menu_settings_title">Settings</string>
+    <string name="article_main_image_content_description">Artcile Main Image</string>
+</resources>
