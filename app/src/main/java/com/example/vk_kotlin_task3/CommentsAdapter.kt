@@ -2,17 +2,16 @@ package com.example.vk_kotlin_task3
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.drawable.ColorDrawable
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 
-class CommentsAdapter(private val items: MutableList<Comment>) : RecyclerView.Adapter<CommentsAdapter.CommentsViewHolder>() {
+class CommentsAdapter(private val items: MutableList<Comment>, private val func: (id: Int?) -> Unit) : RecyclerView.Adapter<CommentsAdapter.CommentsViewHolder>() {
 
     private lateinit var context: Context
 
@@ -34,9 +33,13 @@ class CommentsAdapter(private val items: MutableList<Comment>) : RecyclerView.Ad
             viewHolder.replyHolder.setPadding(startPadding, 0, endPadding, 0)
         }
         if (items[position].is_liked == true) {
-                viewHolder.likeButton.backgroundTintList = ColorStateList.valueOf(R.color.like_active)
+            viewHolder.likeButton.backgroundTintList = ColorStateList.valueOf(R.color.like_active)
         } else if (items[position].is_liked == false) {
             viewHolder.likeButton.clearColorFilter()
+        }
+
+        viewHolder.replyTV.setOnClickListener {
+            func(position)
         }
 
         viewHolder.likeButton.setOnClickListener{
@@ -65,6 +68,7 @@ class CommentsAdapter(private val items: MutableList<Comment>) : RecyclerView.Ad
         val likesCounter: TextView
         val replyHolder: LinearLayout
         val likeButton: ImageView
+        val replyTV: TextView
 
         init {
             usernameTV = itemView.findViewById(R.id.comment_author)
@@ -72,12 +76,9 @@ class CommentsAdapter(private val items: MutableList<Comment>) : RecyclerView.Ad
             likesCounter = itemView.findViewById(R.id.comment_likes_tv)
             replyHolder = itemView.findViewById(R.id.reply_holder)
             likeButton = itemView.findViewById(R.id.like_button)
+            replyTV = itemView.findViewById(R.id.reply_tv)
         }
     }
 
-    fun Context.toPx(dp: Int) = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_PX,
-        dp.toFloat(),
-        resources.displayMetrics
-    ).toInt()
+
 }

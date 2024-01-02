@@ -2,10 +2,9 @@ package com.example.vk_kotlin_task3
 
 import android.content.res.Configuration
 import android.os.Bundle
+import android.text.Editable
 import android.util.Log
-import android.view.KeyEvent
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
@@ -15,7 +14,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -51,8 +49,11 @@ class CommentsFragment : Fragment(R.layout.fragment_comments) {
                 commentList.addAll(restoredItems)
             }
         }
+        Log.d("Arguments", this.arguments.toString())
 
-        adapter = CommentsAdapter(commentList)
+        adapter = CommentsAdapter(commentList) { id: Int? ->
+            createReply(id)
+        }
         commentsWhitespaces = view.findViewById(R.id.comments_whitespace)
         layoutManager = LinearLayoutManager(this.context)
         recyclerView = view.findViewById(R.id.comments_rv)
@@ -89,6 +90,7 @@ class CommentsFragment : Fragment(R.layout.fragment_comments) {
             )
             numberOfComments++
             commentList.add(newComment)
+            commentList.sortedByParentId()
             adapter.notifyItemInserted(commentList.size)
             commentEditText.text.clear()
         }
@@ -110,15 +112,46 @@ class CommentsFragment : Fragment(R.layout.fragment_comments) {
                 }
             } else {
                 val difference = totalComments - commentList.size
-                val comments = withContext(Dispatchers.IO) {
-                    createFakeComments(difference)
-                }
-                if (isActive) {
-                    commentList.addAll(comments)
-                    updateUI()
-                    hideProgressBar()
+                if (difference > 0) {
+                    val comments = withContext(Dispatchers.IO) {
+                        createFakeComments(difference)
+                    }
+                    if (isActive) {
+                        commentList.addAll(comments)
+                        updateUI()
+                        hideProgressBar()
 
+                    }
                 }
+            }
+        }
+    }
+
+    private fun createReply(parentId: Int?) {
+        if (parentId == null) {
+            var comment = Comment(
+                id = commentList.size,
+                content = commentEditText.text.toString(),
+                user = "admin",
+                likeNumber = 0,
+                parentId = null,
+                is_liked = false
+            )
+            commentList.add(comment)
+            adapter.notifyItemInserted(commentList.size)
+        } else {
+            if (!commentEditText.text.toString().isBlank()) {
+                var comment = Comment(
+                    id = commentList.size,
+                    content = commentEditText.text.toString(),
+                    user = "admin",
+                    likeNumber = 0,
+                    parentId = parentId,
+                    is_liked = false
+                )
+                commentList.add(parentId+1, comment)
+                adapter.notifyItemInserted(parentId+1)
+                commentEditText.setText("")
             }
         }
     }
@@ -139,7 +172,9 @@ class CommentsFragment : Fragment(R.layout.fragment_comments) {
             else -> "$numberOfComments comments"
         }
 
-        adapter = CommentsAdapter(commentList)
+        adapter = CommentsAdapter(commentList) { id: Int? ->
+            createReply(id)
+        }
         layoutManager = LinearLayoutManager(this.context)
         recyclerView = requireView().findViewById(R.id.comments_rv)
         recyclerView.adapter = adapter
